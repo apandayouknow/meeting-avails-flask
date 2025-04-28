@@ -1,11 +1,11 @@
 import sqlite3
 
 
-meetings = sqlite3.connect("meetings.db")
+meetings = sqlite3.connect("meetings.db",check_same_thread=False)
 c = meetings.cursor()
 
 # Create the table if it doesn't exist
-c.execute('''CREATE TABLE IF NOT EXISTS users(user_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, email TEXT UNIQUE, password_TEXT NOT NULL)''')
+c.execute('''CREATE TABLE IF NOT EXISTS users(user_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, email TEXT UNIQUE, password TEXT NOT NULL)''')
 c.execute('''CREATE TABLE IF NOT EXISTS events(event_id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, description TEXT, creator_id INTEGER, start_date DATE NOT NULL, end_date DATE NOT NULL, time_slots_per_day INTEGER DEFAULT 360, FOREIGN KEY (creator_id) REFERENCES users(user_id))''')
 c.execute('''CREATE TABLE IF NOT EXISTS availability_blocks(avail_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, weekday INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6), time_slot INTEGER NOT NULL CHECK (time_slot BETWEEN 0 AND 360), FOREIGN KEY (user_id) REFERENCES users(user_id), UNIQUE(user_id, weekday, time_slot))''')
 c.execute('''CREATE TABLE IF NOT EXISTS event_participants(participants_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, event_id INTEGER, override_availability INTEGER DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(user_id), FOREIGN KEY (event_id) REFERENCES events(event_id), UNIQUE(user_id, event_id))''')

@@ -65,7 +65,7 @@
 <body>
 
     <div class="title-bar">
-        <div><strong>OrganizeYourMeet</strong></div>
+        <div><strong><a class="signin-link" href="/">OrganizeYourMeet</a></strong></div>
         <div class="avatar">
             <a class="signin-link" href="/login">☻</a>
         </div>
@@ -76,7 +76,11 @@
             <a href="/new-event">New Event</a>
             <a href="/your-events">Your Events</a>
         </div>
-        <a href="/login">Sign in</a>
+        {% if username != "" %}
+            <a href="/calendar">{{ username }}</a>
+        {% else %}
+            <a href="/login">Login</a>
+        {% endif %} 
     </div>
 
     <div class="main">

@@ -4,69 +4,114 @@
   <meta charset="UTF-8">
   <title>Your Calendar</title>
   <style>
-    body {
-      font-family: 'Trebuchet MS', sans-serif;
-      margin: 0;
-    }
+  body {
+    margin: 0;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
 
-    .navbar, .title-bar {
-      background-color: #d96500;
-      padding: 10px 20px;
-      color: white;
-      font-weight: bold;
-    }
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #d96500;
+    padding: 10px 20px;
+    font-size: 18px;
+  }
 
-    .calendar-container {
-      overflow-x: scroll;
-      white-space: nowrap;
-      padding: 20px;
-    }
+  .navbar-left {
+    display: flex;
+    gap: 15px;
+  }
 
-    .calendar-table {
-      border-collapse: collapse;
-    }
+  .navbar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+  }
 
-    .calendar-table th,
-    .calendar-table td {
-      border: 1px solid #ccc;
-      text-align: center;
-      width: 40px;
-      height: 20px;
-    }
+  .title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ccc;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  .signin-link {
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .calendar-container {
+    overflow-x: scroll;
+    white-space: nowrap;
+    padding: 20px;
+  }
 
-    .time-col {
-      background-color: #f5f5f5;
-      position: sticky;
-      left: 0;
-      z-index: 1;
-    }
+  .calendar-table {
+    border-collapse: collapse;
+  }
 
-    .selected {
-      background-color: #4CAF50 !important;
-    }
+  .calendar-table th,
+  .calendar-table td {
+    border: 1px solid #ccc;
+    text-align: center;
+    width: 40px;
+    height: 20px;
+  }
 
-    .calendar-table th {
-      position: sticky;
-      top: 0;
-      background-color: #fff8e1;
-      z-index: 2;
-    }
+  .time-col {
+    background-color: #f5f5f5;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+  }
 
-    .slot {
-      cursor: pointer;
-      background-color: #e0e0e0;
-    }
+  .selected {
+    background-color: #4CAF50 !important;
+  }
+
+  .calendar-table th {
+    position: sticky;
+    top: 0;
+    background-color: #fff8e1;
+    z-index: 2;
+  }
+
+  .slot {
+    cursor: pointer;
+    background-color: #e0e0e0;
+  }
   </style>
 </head>
 <body>
 
   <div class="title-bar">
-    OrganizeYourMeet
-  </div>
+    <div><strong><a class="signin-link" href="/">OrganizeYourMeet</a></strong></div>
+    <div class="avatar">
+        <a class="signin-link" href="/login">☻</a>
+    </div>
+</div>
 
-  <div class="navbar">
-    New Event | Your Events
-  </div>
+<div class="navbar">
+    <div class="navbar-left">
+        <a href="/new-event">New Event</a>
+        <a href="/your-events">Your Events</a>
+    </div>
+    <a href="/calendar">{{ username }}</a>
+</div>
 
   <h2 style="margin-left: 20px;">Your Calendar</h2>
 
