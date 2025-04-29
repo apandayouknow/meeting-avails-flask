@@ -115,17 +115,18 @@
     <div class="avatar">
         <a class="signin-link" href="/login">☻</a>
     </div>
-</div>
+  </div>
 
-<div class="navbar">
-    <div class="navbar-left">
-        <a href="/new-event">New Event</a>
-        <a href="/your-events">Your Events</a>
-    </div>
-    <a href="/calendar">{{ username }}</a>
-</div>
+  <div class="navbar">
+      <div class="navbar-left">
+          <a href="/new-event">New Event</a>
+          <a href="/your-events">Your Events</a>
+      </div>
+      <a href="/calendar">{{ username }}</a>
+  </div>
 
   <h2 style="margin-left: 20px;">Your Calendar</h2>
+  <button id="save">Save Calendar</button>
 
   <div class="calendar-container">
     <table class="calendar-table" id="calendar">
@@ -137,7 +138,7 @@
     const startDate = new Date('2025-05-17'); // Example
     const numDays = 100;
     const timeSlotsPerDay = 96; // 15min slots from 00:00 to 23:45
-
+    const availabilityBlocks = {{ availability_blocks|tojson|safe }}; // Example data from server
     function pad(n) {
       return n.toString().padStart(2, '0');
     }
@@ -147,6 +148,20 @@
       const minutes = (slot % 4) * 15;
       return `${pad(hours)}:${pad(minutes)}`;
     }
+    function markExistingBlocks() {
+      if (!availabilityBlocks) return;
+      
+      availabilityBlocks.forEach(block => {
+        const blockDate = new Date(block.date);
+        const dayDiff = Math.floor((blockDate - startDate) / (1000 * 60 * 60 * 24));
+        const slot = block.time_slot;
+        
+        const cell = document.querySelector(`.slot[data-day="${dayDiff}"][data-slot="${slot}"]`);
+        if (cell) {
+          cell.classList.add('selected');
+        }
+      });
+  }
 
     function generateCalendar() {
       const table = document.getElementById('calendar');
@@ -196,7 +211,9 @@
         }
 
         table.appendChild(row);
+  
       }
+      markExistingBlocks();
     }
     let isSelecting = false;
     let startCell = null;
@@ -227,6 +244,26 @@
         }
       });
     }
+
+    function getSelectedBlocks(){
+      const selectedBlocks = [];
+      const cells = document.querySelectorAll('.slot.selected');
+
+      cells.forEach(cell => {
+        const day = parseInt(cell.dataset.day);
+        const slot = parseInt(cell.dataset.slot);
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + day);
+
+        selectedBlocks.push({
+          date: date.toISOString().split('T')[0],
+          time_slot: slot,
+          start_time: formatTime(slot)
+        });
+      });
+      return selectedBlocks;
+    }
+
     document.addEventListener('mouseup', () => {
         isSelecting = false;
         startCell = null;
@@ -237,6 +274,22 @@
         isSelecting = false;
         startCell = null;
         lastCell = null;
+    });
+
+    document.getElementById('save').addEventListener('click', async() => {
+      const selectedBlocks = getSelectedBlocks();
+      try{
+        const response = await fetch('/calendar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ blocks: selectedBlocks})
+        });
+      } catch (error){
+        console.error('Error', error);
+        alert('Error saving availability');
+      }
     });
     generateCalendar();
   </script>

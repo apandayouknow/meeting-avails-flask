@@ -48,11 +48,13 @@ def login():
 @app.route("/calendar", methods=["GET", "POST"])
 def home_page():
     global username
-    if flask.request.method == "POST":
-        # Handle form submission for creating events or other actions
-        pass
-    # Fetch events from the database to display on the calendar
     user = databases.get_user_by_username(username)
+    if flask.request.method == "POST":
+        data = flask.request.json
+        blocks = data.get("blocks",[])
+        success = databases.update_availability_blocks(user[0], 0, blocks)
+
+    # Fetch events from the database to display on the calendar
     if user == None:
         user = ""
     if user == "":
