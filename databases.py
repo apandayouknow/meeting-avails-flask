@@ -1,12 +1,14 @@
 import sqlite3
 import json
+import random
+import string
 
 meetings = sqlite3.connect("meetings.db",check_same_thread=False)
 c = meetings.cursor()
 
 # Create the table if it doesn't exist
 c.execute('''CREATE TABLE IF NOT EXISTS users(user_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, email TEXT UNIQUE, password TEXT NOT NULL)''')
-c.execute('''CREATE TABLE IF NOT EXISTS events(event_id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, description TEXT, creator_id INTEGER, start_date DATE NOT NULL, end_date DATE NOT NULL, time_slots_per_day INTEGER DEFAULT 360, FOREIGN KEY (creator_id) REFERENCES users(user_id))''')
+c.execute('''CREATE TABLE IF NOT EXISTS events(event_id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, description TEXT, creator_id INTEGER, start_date DATE NOT NULL, end_date DATE NOT NULL, start_time TEXT NOT NULL, time_slots_per_day INTEGER DEFAULT 96, FOREIGN KEY (creator_id) REFERENCES users(user_id))''')
 c.execute('''CREATE TABLE IF NOT EXISTS availability_blocks(avail_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, event_id INTEGER NOT NULL, availability_blocks TEXT, FOREIGN KEY (user_id) REFERENCES users(user_id), UNIQUE(user_id, event_id))''')
 c.execute('''CREATE TABLE IF NOT EXISTS event_participants(participants_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, event_id INTEGER, override_availability INTEGER DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(user_id), FOREIGN KEY (event_id) REFERENCES events(event_id), UNIQUE(user_id, event_id))''')
 
@@ -36,6 +38,23 @@ def get_availability_blocks(user_id):
             return []
     return []
 
+def add_event(name, description, user_id, start_date, end_date, start_time, time_slots_per_day):
+    try:
+        code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+        c.execute("SELECT * FROM events WHERE code = ?", (code,))
+        c.fetchone()
+        if c.fetchone() != None:
+            return add_event(name, description, user_id, start_date, end_date, start_time, time_slots_per_day)
+        else:
+            c.execute("INSERT INTO events (code, name, creator_id, description, start_date, end_date, start_time, time_slots_per_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (code, name, user_id, description, start_date, end_date, start_time, time_slots_per_day))
+            meetings.commit()
+            return code
+    except sqlite3.IntegrityError:
+        return False  # Event already exists
+    except Exception as e:
+        print(f"Error adding event: {e}")
+        return False
+
 def get_event_by_code(code):
     c.execute("SELECT * FROM events WHERE code = ?", (code,))
     return c.fetchone()
@@ -44,7 +63,7 @@ def get_events_by_user(user_id):
     c.execute("SELECT events.event_id, events.code, events.name, events.description, events.creator_id, events.start_date, events.end_date, events.time_slots_per_day FROM events INNER JOIN event_participants ON events.event_id = event_participants.event_id WHERE event_participants.user_id = ?", (user_id,))
     return c.fetchall()
 
-#account calendar is event_id 0
+# Account calendar is event_id 0
 def update_availability_blocks(user_id, event_id, availability_blocks):
     try:
         blocks_json = json.dumps(availability_blocks)

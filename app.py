@@ -64,18 +64,38 @@ def home_page():
         availability_blocks = []
     return flask.render_template('calendar.html', username=username, availability_blocks=availability_blocks)
 
-@app.route("/create_event", methods=["GET", "POST"])
-def create_event():
+@app.route("/new-event", methods=["GET", "POST"])
+def new_event():
+    global username
+    user = databases.get_user_by_username(username)
+    if user == None:
+        user = ""
+    if user == "":
+        return flask.redirect(flask.url_for("login"))
+    
     if flask.request.method == "POST":
-        event_name = flask.request.form["event_name"]
-        event_description = flask.request.form["event_description"]
+        print(flask.request.form)
+        event_name = flask.request.form["name"]
+        event_description = flask.request.form["description"]
         start_date = flask.request.form["start_date"]
         end_date = flask.request.form["end_date"]
+        start_time = flask.request.form["start_time"]
         time_slots_per_day = int(flask.request.form["time_slots_per_day"])
         
         # Call the add_event function from databases.py
-        if databases.add_event(event_name, event_description, start_date, end_date, time_slots_per_day):
-            return flask.redirect(flask.url_for("home_page"),username=username)
+        code = databases.add_event(event_name, event_description, user[0], start_date, end_date, start_time, time_slots_per_day)
+        if code != False:
+            return flask.redirect(flask.url_for("event_page", code=code))
         else:
             return "Error creating event."
-    return flask.render_template('create_event.html', username=username)
+    return flask.render_template('new-event.html', username=username)
+
+@app.route("/event/<code>", methods=["GET", "POST"])
+def event_page(code):
+    global username
+    user = databases.get_user_by_username(username)
+    event = databases.get_event_by_code(code)
+    if event == None:
+        return "Event not found."
+    print(event)
+    return flask.render_template('event.html', username=username, event=event)
