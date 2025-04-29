@@ -55,13 +55,16 @@
     font-size: 18px;
   }
   .calendar-container {
-    overflow-x: scroll;
+    overflow: scroll;
     white-space: nowrap;
+    max-height: 80vh;
     padding: 20px;
+    user-select: none;
   }
 
   .calendar-table {
     border-collapse: collapse;
+    position: relative;
   }
 
   .calendar-table th,
@@ -69,6 +72,7 @@
     border: 1px solid #ccc;
     text-align: center;
     width: 40px;
+    min-width: 40px;
     height: 20px;
   }
 
@@ -76,18 +80,26 @@
     background-color: #f5f5f5;
     position: sticky;
     left: 0;
-    z-index: 1;
+    z-index: 2;
+    width: 80px;
   }
 
   .selected {
-    background-color: #4CAF50 !important;
+    background-color: #af5b4c !important;
   }
 
   .calendar-table th {
     position: sticky;
     top: 0;
     background-color: #fff8e1;
-    z-index: 2;
+    z-index: 1;
+  }
+
+  .calendar-table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background-color: #fff8e1;
   }
 
   .slot {
@@ -123,7 +135,7 @@
 
   <script>
     const startDate = new Date('2025-05-17'); // Example
-    const numDays = 90;
+    const numDays = 100;
     const timeSlotsPerDay = 96; // 15min slots from 00:00 to 23:45
 
     function pad(n) {
@@ -163,14 +175,69 @@
           cell.className = 'slot';
           cell.dataset.day = d;
           cell.dataset.slot = slot;
-          cell.onclick = () => cell.classList.toggle('selected');
+          
+          cell.addEventListener('mousedown', (e) => {
+            isSelecting = true;
+            startCell = cell;
+            lastCell = cell;
+            isAddingSelection = !cell.classList.contains('selected');
+            cell.classList.toggle('selected');
+            e.preventDefault(); 
+          });
+
+          cell.addEventListener('mouseover', () => {
+            if (isSelecting) {
+              selectCellsBetween(startCell, cell);
+              lastCell = cell;
+            }
+          });
+
           row.appendChild(cell);
         }
 
         table.appendChild(row);
       }
     }
+    let isSelecting = false;
+    let startCell = null;
+    let lastCell = null;
+    let isAddingSelection = false;
 
+    function selectCellsBetween(start, end) {
+      const startDay = parseInt(start.dataset.day);
+      const startSlot = parseInt(start.dataset.slot);
+      const endDay = parseInt(end.dataset.day);
+      const endSlot = parseInt(end.dataset.slot);
+
+      const minDay = Math.min(startDay, endDay);
+      const maxDay = Math.max(startDay, endDay);
+      const minSlot = Math.min(startSlot, endSlot);
+      const maxSlot = Math.max(startSlot, endSlot);
+
+      const cells = document.querySelectorAll('.slot');
+      cells.forEach(cell => {
+        const day = parseInt(cell.dataset.day);
+        const slot = parseInt(cell.dataset.slot);
+        if (day >= minDay && day <= maxDay && slot >= minSlot && slot <= maxSlot) {
+          if (isAddingSelection) {
+            cell.classList.add('selected');
+          } else {
+            cell.classList.remove('selected');
+          }
+        }
+      });
+    }
+    document.addEventListener('mouseup', () => {
+        isSelecting = false;
+        startCell = null;
+        lastCell = null;
+    });
+
+    document.addEventListener('mouseleave', () => {
+        isSelecting = false;
+        startCell = null;
+        lastCell = null;
+    });
     generateCalendar();
   </script>
 </body>
