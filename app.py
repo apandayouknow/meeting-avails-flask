@@ -1,5 +1,6 @@
 import flask
 import databases
+import datetime
 app = flask.Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
@@ -62,7 +63,10 @@ def home_page():
     availability_blocks = databases.get_availability_blocks(user[0])
     if availability_blocks == None:
         availability_blocks = []
-    return flask.render_template('calendar.html', username=username, availability_blocks=availability_blocks)
+    #today's date
+    today = datetime.datetime.today().strftime('%m-%d-%Y')
+    print(today)
+    return flask.render_template('calendar.html', start_date=today, username=username, availability_blocks=availability_blocks)
 
 @app.route("/new-event", methods=["GET", "POST"])
 def new_event():
@@ -74,7 +78,6 @@ def new_event():
         return flask.redirect(flask.url_for("login"))
     
     if flask.request.method == "POST":
-        print(flask.request.form)
         event_name = flask.request.form["name"]
         event_description = flask.request.form["description"]
         start_date = flask.request.form["start_date"]
@@ -94,8 +97,19 @@ def new_event():
 def event_page(code):
     global username
     user = databases.get_user_by_username(username)
+    if user == None:
+        user = ""
+    if user == "":
+        return flask.redirect(flask.url_for("login"))
     event = databases.get_event_by_code(code)
     if event == None:
         return "Event not found."
-    print(event)
-    return flask.render_template('event.html', username=username, event=event)
+    if code not in databases.get_events_by_user(user[0]):
+        databases.add_user_to_event(user[0], event[0])
+    participants_blocks = databases.get_event_participants_availability(event[0])
+    
+    return flask.render_template('event.html', 
+                               username=username, 
+                               event=event,
+                               participants_blocks=participants_blocks,
+                               start_date=event[5])  # event start_date

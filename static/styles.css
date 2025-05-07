@@ -2,7 +2,12 @@ body {
     margin: 0;
     font-family: 'Trebuchet MS', sans-serif;
 }
-
+.main {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    padding: 20px;
+}
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -162,4 +167,25 @@ body {
 }
 .save-button button:hover {
     background-color: #d46f1b;
+}
+.participant-availability {
+    opacity: 0.5;
+}
+.available { 
+    background-color: #ffffff; 
+}
+.overlap-1 { 
+    background-color: #ffebee; 
+}
+.overlap-2 { 
+    background-color: #ffcdd2; 
+}
+.overlap-3 { 
+    background-color: #ef9a9a; 
+}
+.overlap-4 { 
+    background-color: #e57373; 
+}
+.overlap-5 { 
+    background-color: #ef5350; 
 }

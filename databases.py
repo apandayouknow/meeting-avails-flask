@@ -73,3 +73,30 @@ def update_availability_blocks(user_id, event_id, availability_blocks):
     except Exception as e:
         print(f"Error updating availability blocks: {e}")
         return False
+    
+def add_user_to_event(user_id, event_id, override_availability=0):
+    try:
+        c.execute("INSERT OR REPLACE INTO event_participants (user_id, event_id, override_availability) VALUES (?, ?, ?)", (user_id, event_id, override_availability))
+        meetings.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False  # User already exists in the event
+    except Exception as e:
+        print(f"Error adding user to event: {e}")
+        return False
+    
+def get_event_participants_availability(event_id):
+    try:
+        c.execute("""SELECT users.username, availability_blocks.availability_blocks FROM availability_blocks INNER JOIN event_participants ON event_participants.user_id = availability_blocks.user_id INNER JOIN users ON availability_blocks.user_id = users.user_id WHERE event_participants.event_id = ?""", (event_id, ))
+        
+        results = c.fetchall()
+        availability_map = {}
+        
+        for result in results:
+            username = result[0]
+            blocks = json.loads(result[1]) if result[1] else []
+            availability_map[username] = blocks
+        return availability_map
+    except Exception as e:
+        print(f"Error getting participants availability: {e}")
+        return {}
