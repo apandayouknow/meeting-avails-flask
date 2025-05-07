@@ -116,7 +116,7 @@ def event_page(code):
                                username=username, 
                                event=event,
                                participants_blocks=participants_blocks,
-                               start_date=event[5])  # event start_date
+                               start_date=event[5])
 
 @app.route("/event/<code>/join", methods=["POST"])
 def join_event(code):
@@ -134,3 +134,25 @@ def join_event(code):
         return flask.jsonify({"message": "Successfully joined event"}), 200
     else:
         return flask.jsonify({"error": "Error joining event"}), 500
+
+@app.route("/your-events", methods=["GET"])
+def your_events():
+    global username
+    user = databases.get_user_by_username(username)
+    if user == None:
+        user = ""
+    if user == "":
+        return flask.redirect(flask.url_for("login"))
+    events = databases.get_events_by_user(user[0])
+    for i in range(len(events)):
+        slots = int(events[i][8])
+        start_time = events[i][7]
+        if slots == 96:
+            dhour = 0
+            dminute = 0
+        else:
+            dhour = slots//4
+            dminute = (slots%4)*15
+        end_time = str(int(start_time.split(":")[0]) + dhour).zfill(2) + ":" + str(int(start_time.split(":")[1]) + dminute).zfill(2)
+        events[i] += (end_time,)
+    return flask.render_template('your-events.html', username=username, events=events)

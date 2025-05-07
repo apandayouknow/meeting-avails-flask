@@ -60,7 +60,7 @@ def get_event_by_code(code):
     return c.fetchone()
 
 def get_events_by_user(user_id):
-    c.execute("SELECT events.event_id, events.code, events.name, events.description, events.creator_id, events.start_date, events.end_date, events.time_slots_per_day FROM events INNER JOIN event_participants ON events.event_id = event_participants.event_id WHERE event_participants.user_id = ?", (user_id,))
+    c.execute("SELECT events.event_id, events.code, events.name, events.description, events.creator_id, events.start_date, events.end_date, events.start_time, events.time_slots_per_day, users.username FROM events INNER JOIN event_participants ON events.event_id = event_participants.event_id INNER JOIN users ON events.creator_id = users.user_id WHERE event_participants.user_id = ?", (user_id,))
     return c.fetchall()
 
 # Account calendar is event_id 0

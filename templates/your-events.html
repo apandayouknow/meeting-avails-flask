@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<div class="title-bar">
+    <div><strong><a class="signin-link" href="/">OrganizeYourMeet</a></strong></div>
+    <div class="avatar">
+        <a class="signin-link" href="/login">☻</a>
+    </div>
+</div>
+
+<div class="navbar">
+    <div class="navbar-left">
+        <a href="/new-event">New Event</a>
+        <a href="/your-events">Your Events</a>
+    </div>
+    {% if username %}
+        <a href="/calendar">{{ username }}</a>
+    {% else %}
+        <a href="/login">Sign in</a>
+    {% endif %}
+</div>
+
+<div class="events-grid">
+    {% for event in events %}
+    <a href="/event/{{ event[1] }}" class = "event-link">
+        <div class="event-card">
+            <h3>{{ event[2] }}</h3>
+            <p>Dates: {{ event[5] }} - {{ event[6] }}</p>
+            <p>Times: {{ event[7] }} - {{ event[10] }}</p>
+            <!-- <p>Participants: {{ event.participant_count }}</p>
+            <p>Most Available: {{ event.max_availability }}/{{ event.participant_count }}</p> -->
+            <p>Creator: {{ event[9] }}</p>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+</body>
+</html>
