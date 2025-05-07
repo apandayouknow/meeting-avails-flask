@@ -93,9 +93,10 @@ def new_event():
             return "Error creating event."
     return flask.render_template('new-event.html', username=username)
 
-@app.route("/event/<code>", methods=["GET", "POST"])
+@app.route("/event/<code>", methods=["GET"])
 def event_page(code):
     global username
+    joined = True
     user = databases.get_user_by_username(username)
     if user == None:
         user = ""
@@ -104,12 +105,32 @@ def event_page(code):
     event = databases.get_event_by_code(code)
     if event == None:
         return "Event not found."
-    if code not in databases.get_events_by_user(user[0]):
-        databases.add_user_to_event(user[0], event[0])
+    user_events = databases.get_events_by_user(user[0])
+    codes = [event[1] for event in user_events]
+    if code not in codes:
+        print(codes)
+        joined = False
     participants_blocks = databases.get_event_participants_availability(event[0])
-    
-    return flask.render_template('event.html', 
+    print(joined)
+    return flask.render_template('event.html', joined=joined,
                                username=username, 
                                event=event,
                                participants_blocks=participants_blocks,
                                start_date=event[5])  # event start_date
+
+@app.route("/event/<code>/join", methods=["POST"])
+def join_event(code):
+    global username
+    user = databases.get_user_by_username(username)
+    if user == None or user == "":
+        return flask.jsonify({"error": "Not logged in"}), 401
+        
+    event = databases.get_event_by_code(code)
+    if event == None:
+        return flask.jsonify({"error": "Event not found"}), 404
+        
+    # Call the database function to add user to event
+    if databases.add_user_to_event(user[0], event[0]):
+        return flask.jsonify({"message": "Successfully joined event"}), 200
+    else:
+        return flask.jsonify({"error": "Error joining event"}), 500
