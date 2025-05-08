@@ -4,14 +4,14 @@ import datetime
 app = flask.Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
-username = ""
-
 @app.route("/")
 def home():
+    username = flask.session.get('username', '')
     return flask.render_template('index.html', username=username)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    username = flask.session.get('username', '')
     if flask.request.method == "POST":
         username = flask.request.form["username"]
         email = flask.request.form["email"]
@@ -24,7 +24,9 @@ def register():
         
         # Call the add_user function from databases.py
         if databases.add_user(username, email, password):
-            return flask.redirect(flask.url_for("login"))
+            flask.session['username'] = username
+            flask.session.permanent = False
+            return flask.redirect(flask.url_for("home_page"))
         else:
             flask.flash('User already exists or error occurred.', 'danger')
             return flask.render_template('login.html')
@@ -32,7 +34,7 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    global username
+    username = flask.session.get('username', '')
     if flask.request.method == "POST":
         username = flask.request.form["username"]
         password = flask.request.form["password"]
@@ -40,6 +42,8 @@ def login():
         # Call the get_user_by_username function from databases.py
         user = databases.get_user_by_username(username)
         if user and user[3] == password:
+            flask.session['username'] = user[1]
+            flask.session.permanent = False
             return flask.redirect(flask.url_for("home_page"))
         else:
             username = ""
@@ -48,7 +52,7 @@ def login():
 
 @app.route("/calendar", methods=["GET", "POST"])
 def home_page():
-    global username
+    username = flask.session.get('username', '')
     user = databases.get_user_by_username(username)
     if flask.request.method == "POST":
         data = flask.request.json
@@ -70,7 +74,7 @@ def home_page():
 
 @app.route("/new-event", methods=["GET", "POST"])
 def new_event():
-    global username
+    username = flask.session.get('username', '')
     user = databases.get_user_by_username(username)
     if user == None:
         user = ""
@@ -95,7 +99,7 @@ def new_event():
 
 @app.route("/event/<code>", methods=["GET"])
 def event_page(code):
-    global username
+    username = flask.session.get('username', '')
     joined = True
     user = databases.get_user_by_username(username)
     if user == None:
@@ -120,7 +124,7 @@ def event_page(code):
 
 @app.route("/event/<code>/join", methods=["POST"])
 def join_event(code):
-    global username
+    username = flask.session.get('username', '')
     user = databases.get_user_by_username(username)
     if user == None or user == "":
         return flask.jsonify({"error": "Not logged in"}), 401
@@ -137,7 +141,7 @@ def join_event(code):
 
 @app.route("/your-events", methods=["GET"])
 def your_events():
-    global username
+    username = flask.session.get('username', '')
     user = databases.get_user_by_username(username)
     if user == None:
         user = ""
@@ -156,3 +160,5 @@ def your_events():
         end_time = str(int(start_time.split(":")[0]) + dhour).zfill(2) + ":" + str(int(start_time.split(":")[1]) + dminute).zfill(2)
         events[i] += (end_time,)
     return flask.render_template('your-events.html', username=username, events=events)
+
+
